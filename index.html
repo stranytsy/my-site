@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Налоговый калькулятор</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#F3F5F8;color:#1F2A37;font-family:Calibri,'Segoe UI',Arial,sans-serif;line-height:1.4}
+  .wrap{max-width:560px;margin:0 auto;padding:20px 16px 32px}
+  h1{font-size:24px;margin:8px 0 4px}
+  .sub{color:#5B6675;font-size:14px;margin:0 0 18px}
+  .card{background:#fff;border:1px solid #E1E6ED;border-radius:14px;padding:18px;margin-bottom:14px}
+  h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#5B6675;margin:0 0 12px}
+  label{display:block;font-weight:600;margin-top:10px}
+  .hint{font-size:13px;color:#5B6675;margin:2px 0 6px}
+  input{width:100%;font-size:20px;padding:12px;border-radius:10px;border:1.5px solid #C9D1DC;color:#1F2A37}
+  input:focus{outline:none;border-color:#4A7C8C}
+  .main{text-align:center;padding:6px 0 4px}
+  .main .l{color:#5B6675;font-size:14px}
+  .main .v{font-size:34px;font-weight:700;color:#2F6272}
+  .row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #EDF0F4}
+  .row:first-of-type{border-top:0}
+  .row .n{font-weight:600}.row .d{font-size:13px;color:#5B6675}
+  .row b{white-space:nowrap}
+  .grp{display:flex;justify-content:space-between;font-weight:700;margin:14px 0 2px;padding-top:6px}
+  .bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:#E1E6ED;margin:10px 0 6px}
+  .bar i{display:block;height:100%}
+  .leg{font-size:13px;color:#5B6675;display:flex;gap:14px;flex-wrap:wrap}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
+  .tip{background:#EAF2F4;border-radius:10px;padding:12px;font-size:14px}
+  .note{font-size:12px;color:#7A8594;text-align:center;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Налоговый калькулятор</h1>
+  <p class="sub">Сколько налогов вы платите в месяц: с зарплаты и в магазине (Казахстан)</p>
+
+  <div class="card">
+    <h2>1. Введите данные</h2>
+    <label for="sal">Зарплата до вычета налогов, ₸ в месяц</label>
+    <div class="hint">Сумма «до налогов», как в трудовом договоре</div>
+    <input id="sal" type="number" inputmode="numeric" value="400000">
+    <label for="sp">Сколько вы тратите в месяц, ₸</label>
+    <div class="hint">Продукты, одежда, услуги, бензин — всё, за что платите в магазине</div>
+    <input id="sp" type="number" inputmode="numeric" value="250000">
+  </div>
+
+  <div class="card">
+    <h2>2. Результат</h2>
+    <div class="main"><div class="l">Вам остаётся на руки</div><div class="v" id="net"></div></div>
+
+    <div class="grp"><span>Налоги с зарплаты (прямые)</span><span id="gd"></span></div>
+    <div class="row"><div><div class="n">ОПВ — 10%</div><div class="d">Пенсионные взносы</div></div><b id="opv"></b></div>
+    <div class="row"><div><div class="n">ВОСМС — 2%</div><div class="d">Взносы на медстрахование</div></div><b id="vosms"></b></div>
+    <div class="row"><div><div class="n">ИПН — 10%</div><div class="d">Подоходный налог после вычетов</div></div><b id="ipn"></b></div>
+
+    <div class="grp"><span>Налоги в ваших тратах (косвенные)</span><span id="gi"></span></div>
+    <div class="row"><div><div class="n">НДС — 16%</div><div class="d">Уже включён в цены в магазине</div></div><b id="nds"></b></div>
+  </div>
+
+  <div class="card">
+    <h2>3. Итого</h2>
+    <div class="main"><div class="l">Всего налогов в месяц</div><div class="v" id="total"></div></div>
+    <div class="leg" style="justify-content:center"><span id="share"></span><span id="day"></span></div>
+    <div class="bar"><i id="b1" style="background:#2F6272"></i><i id="b2" style="background:#8FB8C4"></i><i id="b3" style="background:#E1E6ED"></i></div>
+    <div class="leg">
+      <span><span class="dot" style="background:#2F6272"></span>Прямые</span>
+      <span><span class="dot" style="background:#8FB8C4"></span>Косвенные</span>
+      <span><span class="dot" style="background:#C9D1DC"></span>Остаётся вам</span>
+    </div>
+  </div>
+
+  <div class="tip"><b>Льгота:</b> стандартный вычет 30 МРП (<span id="vy"></span> в месяц) не облагается ИПН. Он экономит вам <b id="save"></b> в месяц, то есть <b id="saveY"></b> в год.</div>
+  <p class="note">Расчёт ориентировочный: МРП 4 325 ₸, НДС 16%. Актуальные нормы — на kgd.gov.kz</p>
+</div>
+<script>
+  var MRP = 4325, NDS = 16, VYCHET = 30 * MRP;
+  function fmt(x){ return Math.round(x).toLocaleString('ru-RU') + ' ₸'; }
+  function val(id){ return Math.max(0, parseFloat(document.getElementById(id).value) || 0); }
+  function show(id, t){ document.getElementById(id).textContent = t; }
+  function calc(){
+    var sal = val('sal'), sp = val('sp');
+    var opv = sal*0.10, vosms = sal*0.02;
+    var base = Math.max(0, sal - opv - vosms);
+    var ipn = Math.max(0, base - VYCHET)*0.10;
+    var nds = sp*NDS/(100+NDS);
+    var direct = opv+vosms+ipn, total = direct+nds, net = sal-direct;
+    var save = Math.min(base, VYCHET)*0.10;
+    show('opv',fmt(opv)); show('vosms',fmt(vosms)); show('ipn',fmt(ipn)); show('nds',fmt(nds));
+    show('gd',fmt(direct)); show('gi',fmt(nds)); show('net',fmt(net)); show('total',fmt(total));
+    show('share', sal ? (total/sal*100).toFixed(1)+'% от зарплаты' : '');
+    show('day','≈ '+fmt(total/30)+' в день');
+    show('vy',fmt(VYCHET)); show('save',fmt(save)); show('saveY',fmt(save*12));
+    var den = Math.max(sal, total) || 1;
+    document.getElementById('b1').style.width = (direct/den*100)+'%';
+    document.getElementById('b2').style.width = (nds/den*100)+'%';
+    document.getElementById('b3').style.width = Math.max(0,100-(total/den*100))+'%';
+  }
+  document.getElementById('sal').addEventListener('input', calc);
+  document.getElementById('sp').addEventListener('input', calc);
+  calc();
+</script>
+</body>
+</html>
